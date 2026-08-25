@@ -23,7 +23,4 @@ class Semester:                                 # Bauplan für ein Semester
 # Quelle: https://www.youtube.com/watch?v=yYALsys-P_w
 # Quelle: https://www.youtube.com/watch?v=JeznW_7DlB0&t
 # Quelle: https://www.youtube.com/watch?v=rLyYb7BFgQI
-
-mathe = Modul("Mathematik", Modulstatus.AKTUELL, 5)
-print(mathe.status)
-print(mathe.status == Modulstatus.AKTUELL)
+# Quelle: https://www.youtube.com/watch?v=TAMbq0iRUsA

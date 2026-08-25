@@ -32,3 +32,5 @@ class JSONStudentRepository(StudentRepository):     # Implementierung des Studen
                 return Student(daten["vorname"], daten["nachname"], daten["zielnote"], daten["regelstudienzeit"])   # Gibt das Student-Objekt zurück, wenn der Benutzername übereinstimmt
             else:
                 return None                                                                                         # Gibt None zurück, wenn der Benutzername nicht übereinstimmt
+
+# Quelle: https://www.youtube.com/watch?v=97V7ICVeTJc

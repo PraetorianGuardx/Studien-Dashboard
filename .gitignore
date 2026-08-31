@@ -6,3 +6,10 @@ venv/
 .vscode/
 *.json
 !requirements.json
+test_benutzerkonto.py
+test_berechnung.py
+test_hashing_benutzer.py
+test_hashlib.py
+test_json.py
+test_kompositionen.py
+test_optionales_attribut.py

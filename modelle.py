@@ -43,26 +43,27 @@ class Modul:
         else:
             return None                                         # gibt None zurück, wenn keine bewerteten Prüfungsleistungen vorhanden sind
 
-class Semester:                                 # Bauplan für ein Semester
-    def __init__(self, nummer):                 # initialisiert ein Semester mit einer Nummer und einer leeren Liste von Modulen
-        self.semester_nummer = nummer           # speichert die Nummer des Semesters
-        self.module = []                        # leere Liste, die die Module des Semesters speichert
+class Semester:                                     # Bauplan für ein Semester
+    def __init__(self, nummer):                     # initialisiert ein Semester mit einer Nummer und einer leeren Liste von Modulen
+        self.semester_nummer = nummer               # speichert die Nummer des Semesters
+        self.module = []                            # leere Liste, die die Module des Semesters speichert
 
-    def modul_hinzufuegen(self, modul):         # fügt ein Modul zur Liste der Module des Semesters hinzu
-        self.module.append(modul)               # hängt das Modul an die Liste der Module des Semesters an
+    def modul_hinzufuegen(self, modul):             # fügt ein Modul zur Liste der Module des Semesters hinzu
+        self.module.append(modul)                   # hängt das Modul an die Liste der Module des Semesters an
 
-class Studiengang:                              # Bauplan für einen Studiengang
-    def __init__(self, name, ects_gesamt):      # initialisiert einen Studiengang mit einem Namen
-        self.name = name                        # speichert den Namen des Studiengangs
-        self.ects_gesamt = ects_gesamt          # speichert die Gesamtzahl der ECTS-Punkte des Studiengangs
+class Studiengang:                                  # Bauplan für einen Studiengang
+    def __init__(self, name, ects_gesamt):          # initialisiert einen Studiengang mit einem Namen
+        self.name = name                            # speichert den Namen des Studiengangs
+        self.ects_gesamt = ects_gesamt              # speichert die Gesamtzahl der ECTS-Punkte des Studiengangs
 
-class Belegung:                                 # Bauplan für eine Belegung
-    def __init__(self, startdatum):             # initialisiert eine Belegung mit einem Startdatum und einer leeren Liste von Semestern
-        self.startdatum = startdatum            # speichert das Startdatum der Belegung
-        self.semester = []                      # leere Liste, die die Semester der Belegung speichert
+class Belegung:                                     # Bauplan für eine Belegung
+    def __init__(self, startdatum, studiengang):    # initialisiert eine Belegung mit einem Startdatum und einer leeren Liste von Semestern
+        self.startdatum = startdatum                # speichert das Startdatum der Belegung
+        self.studiengang = studiengang              # speichert den Studiengang der Belegung
+        self.semester = []                          # leere Liste, die die Semester der Belegung speichert
 
-    def semester_hinzufuegen(self, semester):   # fügt ein Semester zur Liste der Semester der Belegung hinzu
-        self.semester.append(semester)          # hängt das Semester an die Liste der Semester der Belegung an
+    def semester_hinzufuegen(self, semester):       # fügt ein Semester zur Liste der Semester der Belegung hinzu
+        self.semester.append(semester)              # hängt das Semester an die Liste der Semester der Belegung an
 
     def ects_erreicht_berechnen(self):                          # berechnet die erreichten ECTS-Punkte der Belegung
         ects_erreicht = 0                                       # initialisiert die erreichten ECTS-Punkte mit 0

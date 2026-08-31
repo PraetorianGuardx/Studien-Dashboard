@@ -1,13 +1,14 @@
-from repositories import StudentRepository
+from repositories import BenutzerkontoRepository
 
 class FortschrittService:
-    def __init__(self, repository: StudentRepository):                              # Initialisiert den FortschrittService mit einem StudentRepository
-        self.repository = repository
+    def __init__(self, konto_repository: BenutzerkontoRepository):  # Initialisiert den FortschrittService mit einem BenutzerkontoRepository
+        self.konto_repository = konto_repository                    # Speichert das BenutzerkontoRepository als Attribut des FortschrittService
 
-    def fortschritt_anzeigen(self, benutzername):                                   # Zeigt den Fortschritt eines Studenten an
-        student = self.repository.laden(benutzername)                               # Lädt den Studenten aus dem Repository
-        if student is None:                                                         # Überprüft, ob der Student existiert
-            return None                                                             # Gibt None zurück, wenn der Student nicht existiert
+    def fortschritt_anzeigen(self, benutzername):                   # Zeigt den Fortschritt eines Studenten an
+        konto = self.konto_repository.laden(benutzername)           # Lädt das Benutzerkonto des Studenten anhand des Benutzernamens
+        if konto is None:                                           # Überprüft, ob das Benutzerkonto existiert
+            return None                                             # Gibt None zurück, wenn das Benutzerkonto nicht existiert
+        student = konto.student                                     # Holt das Studentenobjekt aus dem Benutzerkonto
 
         ects_erreicht = 0                                                           # Initialisiert die erreichten ECTS-Punkte mit 0
         for belegung in student.belegungen:                                         # Iteriert über alle Belegungen des Studenten

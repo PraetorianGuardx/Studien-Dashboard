@@ -27,5 +27,30 @@ class JSONStudentRepository(StudentRepository):         # Implementierung des St
             else:
                 return None                             # Gibt None zurück, wenn kein passender Student gefunden wurde 
 
+class BenutzerkontoRepository(ABC):                                             # Abstrakte Basisklasse für das BenutzerkontoRepository
+    @abstractmethod
+    def speichern(self, konto):                                                 # Abstrakte Methode zum Speichern eines Benutzerkontos
+        pass
+
+    @abstractmethod
+    def laden(self, benutzername):                                              # Abstrakte Methode zum Laden eines Benutzerkontos
+        pass
+
+class JSONBenutzerkontoRepository(BenutzerkontoRepository):                     # Implementierung des BenutzerkontoRepository für JSON-Dateien
+    def __init__(self, dateipfad):                                              # Initialisiert das Repository mit einem Dateipfad
+        self.dateipfad = dateipfad
+
+    def speichern(self, konto):                                                 # Speichert ein Benutzerkonto in einer JSON-Datei
+        with open(self.dateipfad, 'w') as datei:                                # Öffnet die Datei im Schreibmodus
+            datei.write(jsonpickle.encode(konto))                               # Serialisiert das Benutzerkonto und schreibt es in die Datei
+
+    def laden(self, benutzername):                                              # Lädt ein Benutzerkonto aus einer JSON-Datei
+        with open(self.dateipfad, 'r') as datei:                                # Öffnet die Datei im Lesemodus
+            konto = jsonpickle.decode(datei.read())                             # Deserialisiert das Benutzerkonto aus der Datei
+            if konto.benutzername == benutzername:                              # Überprüft, ob der Benutzername des Kontos mit dem Benutzernamen übereinstimmt
+                return konto                                                    # Gibt das Benutzerkonto zurück, wenn es übereinstimmt
+            else:
+                return None                                                     # Gibt None zurück, wenn kein passendes Benutzerkonto gefunden wurde
+
 # Quelle: https://www.youtube.com/watch?v=97V7ICVeTJc
 # Quelle: https://pypi.org/project/jsonpickle/

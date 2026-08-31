@@ -6,7 +6,7 @@ class Modulstatus(Enum):                        # Enum-Klasse für den Status ei
     ABGESCHLOSSEN = "abgeschlossen"             # Status: Modul abgeschlossen
 
 class Pruefungsleistung:                        # Bauplan für eine Prüfungsleistung
-    def __init__(self, titel, datum):           # initialisiert eine Prüfungsleistung mit einem Modul und einer Note
+    def __init__(self, titel, datum):           # initialisiert eine Prüfungsleistung mit einem Titel, einem Datum und einer Note (initialisiert mit None)
         self.titel = titel                      # speichert den Titel der Prüfungsleistung
         self.datum = datum                      # speichert das Datum der Prüfungsleistung
         self.note = None                        # speichert die Note der Prüfungsleistung (initialisiert mit None, da die Note noch nicht bekannt ist)

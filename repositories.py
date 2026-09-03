@@ -1,56 +1,52 @@
 from abc import ABC, abstractmethod
-from modelle import Student
 import jsonpickle
 
-class StudentRepository(ABC):                           # Abstrakte Basisklasse für das StudentRepository
+
+class BenutzerkontoRepository(ABC):                                 # Abstrakte Basisklasse für das BenutzerkontoRepository
     @abstractmethod
-    def speichern(self, student):                       # Abstrakte Methode zum Speichern eines Studenten
+    def speichern(self, konto):                                     # Abstrakte Methode zum Speichern eines Benutzerkontos
         pass
 
     @abstractmethod
-    def laden(self, benutzername):                      # Abstrakte Methode zum Laden eines Studenten
+    def laden(self, benutzername):                                  # Abstrakte Methode zum Laden eines Benutzerkontos
         pass
 
-class JSONStudentRepository(StudentRepository):         # Implementierung des StudentRepository für JSON-Dateien
-    def __init__(self, dateipfad):                      # Initialisiert das Repository mit einem Dateipfad
+    @abstractmethod
+    def loeschen(self, benutzername):                               # Abstrakte Methode zum Löschen eines Benutzerkontos
+        pass
+
+class JSONBenutzerkontoRepository(BenutzerkontoRepository):         # Implementierung des BenutzerkontoRepository für JSON-Dateien
+    def __init__(self, dateipfad):                                  # Initialisiert das Repository mit einem Dateipfad
         self.dateipfad = dateipfad
 
-    def speichern(self, student):                       # Speichert einen Studenten in einer JSON-Datei
-        with open(self.dateipfad, 'w') as datei:        # Öffnet die Datei im Schreibmodus
-            datei.write(jsonpickle.encode(student))     # Serialisiert das Studentenobjekt und schreibt es in die Datei
+    def speichern(self, konto):                                     # Speichert ein Benutzerkonto in einer JSON-Datei
+        konten = self._alle_laden()                                 # Lädt alle vorhandenen Konten
+        konten[konto.benutzername.strip().lower()] = konto          # Speichert das Benutzerkonto im Dictionary, wobei der Schlüssel der normalisierte Benutzername ist
+        with open(self.dateipfad, 'w') as datei:                    # Öffnet die Datei im Schreibmodus
+            datei.write(jsonpickle.encode(konten))                  # Serialisiert alle Benutzerkonten und schreibt sie in die Datei
 
-    def laden(self, benutzername):                      # Lädt einen Studenten aus einer JSON-Datei
-        with open(self.dateipfad, 'r') as datei:        # Öffnet die Datei im Lesemodus
-            student = jsonpickle.decode(datei.read())   # Deserialisiert das Studentenobjekt aus der Datei
-            if student.vorname == benutzername:         # Überprüft, ob der Vorname des Studenten mit dem Benutzernamen übereinstimmt
-                return student                          # Gibt das Studentenobjekt zurück, wenn es übereinstimmt
-            else:
-                return None                             # Gibt None zurück, wenn kein passender Student gefunden wurde 
+    def laden(self, benutzername):                                  # Lädt ein Benutzerkonto aus einer JSON-Datei
+        konten = self._alle_laden()                                 # Lädt alle vorhandenen Konten
+        return konten.get(benutzername.strip().lower())             # Gibt das Benutzerkonto für den angegebenen Benutzernamen zurück, oder None, wenn es nicht gefunden wurde
 
-class BenutzerkontoRepository(ABC):                                             # Abstrakte Basisklasse für das BenutzerkontoRepository
-    @abstractmethod
-    def speichern(self, konto):                                                 # Abstrakte Methode zum Speichern eines Benutzerkontos
-        pass
+    def _alle_laden(self):                                          # Hilfsmethode zum Laden aller Benutzerkonten
+        try:
+            with open(self.dateipfad, 'r') as datei:                # Öffnet die Datei im Lesemodus
+                inhalt = datei.read()                               # Liest den Inhalt der Datei
+                if not inhalt:                                      # Überprüft, ob die Datei leer ist
+                    return {}                                       # Gibt ein leeres Dictionary zurück, wenn die Datei leer ist
+                return jsonpickle.decode(inhalt)                    # Deserialisiert und gibt alle Benutzerkonten zurück
+        except FileNotFoundError:                                   # Fängt den Fehler ab, wenn die Datei nicht gefunden wird
+            return {}                                               # Gibt ein leeres Dictionary zurück, wenn keine Konten vorhanden sind
 
-    @abstractmethod
-    def laden(self, benutzername):                                              # Abstrakte Methode zum Laden eines Benutzerkontos
-        pass
-
-class JSONBenutzerkontoRepository(BenutzerkontoRepository):                     # Implementierung des BenutzerkontoRepository für JSON-Dateien
-    def __init__(self, dateipfad):                                              # Initialisiert das Repository mit einem Dateipfad
-        self.dateipfad = dateipfad
-
-    def speichern(self, konto):                                                 # Speichert ein Benutzerkonto in einer JSON-Datei
-        with open(self.dateipfad, 'w') as datei:                                # Öffnet die Datei im Schreibmodus
-            datei.write(jsonpickle.encode(konto))                               # Serialisiert das Benutzerkonto und schreibt es in die Datei
-
-    def laden(self, benutzername):                                              # Lädt ein Benutzerkonto aus einer JSON-Datei
-        with open(self.dateipfad, 'r') as datei:                                # Öffnet die Datei im Lesemodus
-            konto = jsonpickle.decode(datei.read())                             # Deserialisiert das Benutzerkonto aus der Datei
-            if konto.benutzername == benutzername:                              # Überprüft, ob der Benutzername des Kontos mit dem Benutzernamen übereinstimmt
-                return konto                                                    # Gibt das Benutzerkonto zurück, wenn es übereinstimmt
-            else:
-                return None                                                     # Gibt None zurück, wenn kein passendes Benutzerkonto gefunden wurde
+    def loeschen(self, benutzername):                               # Löscht ein Benutzerkonto aus der JSON-Datei
+        konten = self._alle_laden()                                 # Lädt alle vorhandenen Konten
+        if benutzername.strip().lower() in konten:                  # Überprüft, ob das Benutzerkonto existiert
+            del konten[benutzername.strip().lower()]                # Löscht das Benutzerkonto
+            with open(self.dateipfad, 'w') as datei:                # Öffnet die Datei im Schreibmodus
+                datei.write(jsonpickle.encode(konten))              # Serialisiert die verbleibenden Konten und schreibt sie in die Datei
+            return True                                             # Gibt True zurück, wenn das Konto erfolgreich gelöscht wurde
+        return False                                                # Gibt False zurück, wenn das Konto nicht gefunden wurde
 
 # Quelle: https://www.youtube.com/watch?v=97V7ICVeTJc
 # Quelle: https://pypi.org/project/jsonpickle/

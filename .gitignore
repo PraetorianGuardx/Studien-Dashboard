@@ -5,7 +5,6 @@ venv/
 *.egg-info/
 .vscode/
 *.json
-!requirements.json
 test_benutzerkonto.py
 test_berechnung.py
 test_hashing_benutzer.py

@@ -12,3 +12,6 @@ test_hashlib.py
 test_json.py
 test_kompositionen.py
 test_optionales_attribut.py
+dist/
+build/
+*.spec

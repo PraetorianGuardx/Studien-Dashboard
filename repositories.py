@@ -38,6 +38,9 @@ class JSONBenutzerkontoRepository(BenutzerkontoRepository):         # Implementi
                 return jsonpickle.decode(inhalt)                    # Deserialisiert und gibt alle Benutzerkonten zurück
         except FileNotFoundError:                                   # Fängt den Fehler ab, wenn die Datei nicht gefunden wird
             return {}                                               # Gibt ein leeres Dictionary zurück, wenn keine Konten vorhanden sind
+        except Exception as fehler:                                 # Fängt alle anderen Fehler ab, die beim Laden der Datei auftreten können
+            # Wirft einen RuntimeError, um auf die beschädigte Datei hinzuweisen und Datenverlust zu vermeiden
+            raise RuntimeError(f"Die Datei {self.dateipfad} ist beschädigt oder kann nicht gelesen werden. Um Dateiverlust zu vermeiden, wird die Datei nicht automatisch überschrieben.") from fehler
 
     def loeschen(self, benutzername):                               # Löscht ein Benutzerkonto aus der JSON-Datei
         konten = self._alle_laden()                                 # Lädt alle vorhandenen Konten

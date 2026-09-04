@@ -2,12 +2,13 @@ from repositories import JSONBenutzerkontoRepository
 from services import FortschrittService
 from controller import StudentController
 from view import KonsolenView
+import getpass
 
 class Application:                                                                      # Bauplan für die Anwendung
     def __init__(self):
         self.konto_repository = JSONBenutzerkontoRepository("konten.json")              # Initialisiert das Benutzerkonto-Repository mit dem Dateipfad "konten.json"
         service = FortschrittService(self.konto_repository)                             # Initialisiert den FortschrittService mit dem Benutzerkonto-Repository
-        self.controller = StudentController(service)                                    # Initialisiert den StudentController mit dem Fortschritt
+        self.controller = StudentController(service)                                    # Initialisiert den StudentController mit dem FortschrittService
         self.view = KonsolenView()                                                      # Initialisiert die Konsolenansicht
 
     def starten(self):
@@ -23,8 +24,8 @@ class Application:                                                              
                 self._anmelden()                                                        # Aufruf der Methode _anmelden, um den Anmeldeprozess zu starten
             elif wahl == "2":                                                           # Wenn der Benutzer "2" wählt, wird der Registrierungsprozess gestartet
                 self._registrieren()                                                    # Aufruf der Methode _registrieren, um den Registrierungsprozess zu starten
-            elif wahl == "3":                                                           # Wenn der Benutzer "3" wählt, wird der Passwort-Zurücksetzen-Prozess gestartet
-                self._passwort_zuruecksetzen()                                          # Aufruf der Methode _passwort_zuruecksetzen, um den Passwort-Zurücksetzen-Prozess zu starten
+            elif wahl == "3":                                                           # Wenn der Benutzer "3" wählt, wird der Passwort-Vergessen-Prozess gestartet
+                self._passwort_vergessen()                                              # Aufruf der Methode _passwort_vergessen, um den Passwort-Vergessen-Prozess zu starten
             elif wahl == "4":                                                           # Wenn der Benutzer "4" wählt, wird die Anwendung beendet
                 print("Beenden der Anwendung.")
                 break                                                                   # Beendet die Endlosschleife und somit die Anwendung
@@ -33,30 +34,33 @@ class Application:                                                              
 
     def _anmelden(self):
         benutzername = input("Benutzername: ")                                          # Fragt den Benutzer nach dem Benutzernamen
-        passwort = input("Passwort: ")                                                  # Fragt den Benutzer nach dem Passwort
+        passwort = getpass.getpass("Passwort: ")                                        # Fragt den Benutzer nach dem Passwort (ohne sichtbare Eingabe)
         konto = self.konto_repository.laden(benutzername)                               # Lädt das Benutzerkonto aus dem Repository
-        if konto is None:                                                               # Wenn das Konto nicht existiert, wird eine Fehlermeldung ausgegeben
+        if konto is None:                                                               
             self.view.zeige_login_fehler()                                              # Wenn das Konto nicht existiert, wird eine Fehlermeldung ausgegeben
             return
         login_erfolg = self.controller.login_versuchen(konto, benutzername, passwort)   # Versucht, den Benutzer anzumelden
-        if login_erfolg:                                                                # Wenn die Anmeldung erfolgreich war, wird der Fortschritt des Benutzers angezeigt
-            self._hauptmenue(benutzername)                                              # Aufruf der Methode _hauptmenue, um das Hauptmenü anzuzeigen
-        else:                                                                           # Wenn die Anmeldung fehlschlägt, wird eine Fehlermeldung ausgegeben
+        if login_erfolg:                                                                
+            self._hauptmenue(benutzername)                                              # Wenn die Anmeldung erfolgreich war, wird das Hauptmenü angezeigt
+        else:                                                                           
             self.view.zeige_login_fehler()                                              # Wenn die Anmeldung fehlschlägt, wird eine Fehlermeldung ausgegeben
 
     def _passwort_vergessen(self):                                                      # Methode für den Passwort-Vergessen-Prozess
-        benutzername = input("Benutzername: ")                                          # Fragt den Benutzer nach dem Benutzernamen
-        konto = self.konto_repository.laden(benutzername)                               # Lädt das Benutzerkonto aus dem Repository
-        if konto is None:                                                               # Wenn das Konto nicht existiert, wird eine Fehlermeldung ausgegeben
-            print("Benutzerkonto existiert nicht.")                                     # Gibt eine Fehlermeldung aus, wenn das Benutzerkonto nicht existiert
-            return
-        antwort = self.view.frage_sicherheitsantwort_ab(konto.sicherheitsfrage)                                                                         # Fragt den Benutzer nach der Antwort auf die Sicherheitsfrage
-        neues_passwort = self.view.frage_neues_passwort_ab()                                                                                            # Fragt den Benutzer nach einem neuen Passwort
-        erfolg = self.controller.passwort_zuruecksetzen(self.konto_repository, benutzername, antwort, neues_passwort)                                   # Versucht, das Passwort zurückzusetzen
-        if erfolg:                                                                                                                                      # Wenn das Passwort erfolgreich zurückgesetzt wurde, wird eine Erfolgsmeldung ausgegeben
-            print("Passwort erfolgreich zurückgesetzt.")                                                                                                # Gibt eine Erfolgsmeldung aus, wenn das Passwort erfolgreich zurückgesetzt wurde
-        else:                                                                                                                                           # Wenn das Zurücksetzen des Passworts fehlschlägt, wird eine Fehlermeldung ausgegeben
-            print("Fehler beim Zurücksetzen des Passworts. Bitte überprüfen Sie Ihre Eingaben.")                                                        # Gibt eine Fehlermeldung aus, wenn das Zurücksetzen des Passworts fehlschlägt
+        benutzername = input("Benutzername: ")                                                                      # Fragt den Benutzer nach dem Benutzernamen
+        konto = self.konto_repository.laden(benutzername)                                                           # Lädt das Benutzerkonto aus dem Repository
+        if konto is None:                                                                                           # Überprüft, ob das Benutzerkonto existiert
+            print("Benutzerkonto existiert nicht.")                                                                 # Gibt eine Fehlermeldung aus, wenn das Benutzerkonto nicht existiert
+            return                                                                                                  # Beendet die Methode, wenn das Benutzerkonto nicht existiert
+        antwort = self.view.frage_sicherheitsantwort_ab(konto.sicherheitsfrage)                                     # Fragt den Benutzer nach der Sicherheitsantwort
+        if not self.controller.sicherheitsantwort_pruefen(self.konto_repository, benutzername, antwort):            # Überprüft die Sicherheitsantwort des Benutzerkontos
+            print("Sicherheitsantwort ist nicht korrekt.")                                                          # Gibt eine Fehlermeldung aus, wenn die Sicherheitsantwort nicht korrekt ist
+            return                                                                                                  # Beendet die Methode, wenn die Sicherheitsantwort nicht korrekt ist
+        neues_passwort = self.view.frage_neues_passwort_ab()                                                        # Fragt den Benutzer nach einem neuen Passwort
+        erfolg = self.controller.passwort_setzen(self.konto_repository, benutzername, neues_passwort)               # Setzt das neue Passwort für das Benutzerkonto und gibt den Erfolg zurück
+        if erfolg:                                                                                                  # Überprüft, ob das Passwort erfolgreich gesetzt wurde
+            print("Passwort erfolgreich zurückgesetzt.")                                                            # Gibt eine Erfolgsmeldung aus, wenn das Passwort erfolgreich zurückgesetzt wurde
+        else:                                                                                                       # Wenn das Passwort nicht erfolgreich gesetzt wurde, wird eine Fehlermeldung ausgegeben
+            print("Fehler beim Zurücksetzen des Passworts. Bitte versuchen Sie es erneut.")                         # Gibt eine Fehlermeldung aus, wenn das Passwort nicht erfolgreich zurückgesetzt wurde
 
     def _hauptmenue(self, benutzername):                                                # Methode für das Hauptmenü nach erfolgreicher Anmeldung
         while True:                                                                     # Endlosschleife für das Hauptmenü
@@ -68,8 +72,9 @@ class Application:                                                              
             print("5. Semester entfernen")                                              # Gibt die Option "Semester entfernen" aus
             print("6. Modul entfernen")                                                 # Gibt die Option "Modul entfernen" aus
             print("7. Prüfungsleistung entfernen")                                      # Gibt die Option "Prüfungsleistung entfernen" aus
-            print("8. Abmelden")                                                        # Gibt die Option "Abmelden" aus
-            print("9. Konto löschen")                                                   # Gibt die Option "Konto löschen" aus
+            print("8. Gesamtübersicht anzeigen")                                        # Gibt die Option "Gesamtübersicht anzeigen" aus
+            print("9. Abmelden")                                                        # Gibt die Option "Abmelden" aus
+            print("10. Konto löschen")                                                  # Gibt die Option "Konto löschen" aus
             wahl = input("Auswahl: ")                                                   # Fragt den Benutzer nach einer Auswahl
 
             if wahl == "1":                                                                                                                             # Wenn der Benutzer "1" wählt, wird der Fortschritt angezeigt
@@ -78,7 +83,11 @@ class Application:                                                              
                 input("\nDrücken Sie die Eingabetaste, um fortzufahren...")                                                                             # Wartet auf die Eingabe des Benutzers, bevor das Menü erneut angezeigt wird
             elif wahl == "2":                                                                                                                           # Wenn der Benutzer "2" wählt, wird das Semester hinzugefügt
                 semester = self.view.frage_semester_ab()                                                                                                # Fragt nach dem neuen Semester
-                self.controller.semester_hinzufuegen(benutzername, self.konto_repository, semester)                                                     # Fügt das Semester hinzu
+                erfolg = self.controller.semester_hinzufuegen(benutzername, self.konto_repository, semester)                                            # Fügt das Semester hinzu und gibt den Erfolg zurück
+                if erfolg:                                                                                                                              # Wenn das Semester erfolgreich hinzugefügt wurde, wird eine Erfolgsmeldung ausgegeben
+                    print("Semester erfolgreich hinzugefügt.")                                                                                          # Gibt eine Erfolgsmeldung aus, wenn das Semester erfolgreich hinzugefügt wurde
+                else:                                                                                                                                   # Wenn das Semester nicht hinzugefügt werden konnte, wird eine Fehlermeldung ausgegeben
+                    print("Semester konnte nicht hinzugefügt werden. Semester existiert bereits.")                                                      # Gibt eine Fehlermeldung aus, wenn das Semester nicht hinzugefügt werden konnte
             elif wahl == "3":                                                                                                                           # Wenn der Benutzer "3" wählt, wird das Modul hinzugefügt
                 modul_daten = self.view.frage_modul_ab()                                                                                                # Fragt nach dem neuen Modul
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)                                         # Ruft die Liste der Semester des Benutzers ab
@@ -146,15 +155,22 @@ class Application:                                                              
                             gewaehlte_pruefungsleistung = self.view.waehle_aus_liste(pruefungsleistung_liste, lambda p: f"{p.titel} ({p.datum})")       # Fragt den Benutzer, welche Prüfungsleistung entfernt werden soll
                             self.controller.pruefungsleistung_entfernen(self.konto_repository, konto, gewaehltes_modul, gewaehlte_pruefungsleistung)    # Entfernt die gewählte Prüfungsleistung
                             print("Prüfungsleistung erfolgreich entfernt.")
-            elif wahl == "8":                                                                                                                           # Wenn der Benutzer "8" wählt, wird die Schleife beendet und der Benutzer abgemeldet
+            elif wahl == "8":                                                                                                                           # Wenn der Benutzer "8" wählt, wird die Gesamtübersicht der Semester angezeigt
+                konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)                                         # Ruft die Liste der Semester des Benutzers ab
+                self.view.zeige_gesamtuebersicht(semester_liste)                                                                                        # Zeigt die Gesamtübersicht der Semester an
+                input("\nDrücken Sie die Eingabetaste, um fortzufahren...")                                                                             # Wartet auf die Eingabe des Benutzers, bevor das Menü erneut angezeigt wird
+            elif wahl == "9":                                                                                                                           # Wenn der Benutzer "9" wählt, wird der Benutzer abgemeldet
                 print("Abmeldung erfolgreich.")
-                break
-            elif wahl == "9":                                                                                                                           # Wenn der Benutzer "9" wählt, wird das Konto gelöscht
+                break                                                                                                                                   # Beendet die Schleife und somit das Hauptmenü, um den Benutzer abzumelden
+            elif wahl == "10":                                                                                                                          # Wenn der Benutzer "10" wählt, wird das Konto gelöscht
                 bestaetigung = input("Sind Sie sicher, dass Sie Ihr Konto löschen möchten? (ja/nein): ")                                                # Fragt den Benutzer nach einer Bestätigung zur Kontolöschung
                 if bestaetigung.lower() == "ja":                                                                                                        # Wenn der Benutzer "ja" eingibt, wird das Konto gelöscht
-                    self.controller.konto_loeschen(benutzername, self.konto_repository)                                                                 # Löscht das Benutzerkonto
-                    print("Konto erfolgreich gelöscht. Die Anwendung wird beendet.")                                                                    # Gibt eine Erfolgsmeldung aus und beendet die Anwendung
-                    break                                                                                                                               # Beendet die Schleife und somit die Anwendung
+                    erfolg = self.controller.konto_loeschen(benutzername, self.konto_repository)                                                        # Löscht das Benutzerkonto
+                    if erfolg:
+                        print("Konto erfolgreich gelöscht. Die Anwendung wird beendet.")                                                                # Gibt eine Erfolgsmeldung aus und beendet die Anwendung
+                        break                                                                                                                           # Beendet die Schleife und somit die Anwendung
+                    else:
+                        print("Fehler beim Löschen des Kontos.")                                                                                        # Gibt eine Fehlermeldung aus, wenn das Löschen des Kontos fehlschlägt
                 else:
                     print("Abgebrochen.")                                                                                                               # Gibt eine Abbruchmeldung aus, wenn der Benutzer die Kontolöschung abbricht                                                                                             
             else:                                                                                                                                       # Wenn der Benutzer eine ungültige Auswahl trifft, wird eine Fehlermeldung ausgegeben
@@ -169,5 +185,9 @@ class Application:                                                              
             print("Registrierung erfolgreich. Sie können sich jetzt anmelden.")
 
 if __name__ == "__main__":                                                              # Wenn die Datei direkt ausgeführt wird, wird die Anwendung gestartet
-    app = Application()                                                                 # Erstellt eine Instanz der Anwendung
-    app.starten()                                                                       # Startet die Anwendung
+    try:
+        app = Application()                                                             # Erstellt eine Instanz der Anwendung
+        app.starten()                                                                   # Startet die Anwendung
+    except RuntimeError as fehler:                                                      # Fängt RuntimeError ab, die beim Starten der Anwendung auftreten können
+        print(f"\nEin schwerwiegender Fehler ist aufgetreten: {fehler}")                # Gibt eine Fehlermeldung aus, wenn ein schwerwiegender Fehler auftritt
+        print("Das Programm wird beendet.")

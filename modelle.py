@@ -27,7 +27,7 @@ class Pruefungsleistung:                                                        
 class Modul:
     def __init__(self, name, status, ects):                                     # Initialisiert ein Modul mit einem Namen, einem Status und einer Anzahl von ECTS-Punkten
         self.name = name                                                        # Speichert den Namen des Moduls
-        self.status = status                                                    # Speichert den Status des Moduls (bestanden, nicht bestanden, in Bearbeitung)
+        self.status = status                                                    # Speichert den Status des Moduls (bevorstehend, aktuell oder abgeschlossen)
         self.ects = ects                                                        # Speichert die ECTS-Punkte des Moduls
         self.pruefungsleistungen = []                                           # Leere Liste, die die Prüfungsleistungen des Moduls speichert
 
@@ -65,12 +65,12 @@ class Semester:                                                                 
         self.module.remove(modul)                                               # Entfernt das angegebene Modul aus der Liste der Module des Semesters
 
 class Studiengang:                                                              # Bauplan für einen Studiengang
-    def __init__(self, name, ects_gesamt):                                      # Initialisiert einen Studiengang mit einem Namen
+    def __init__(self, name, ects_gesamt):                                      # Initialisiert einen Studiengang mit einem Namen und einer Gesamtzahl von ECTS-Punkten
         self.name = name                                                        # Speichert den Namen des Studiengangs
         self.ects_gesamt = ects_gesamt                                          # Speichert die Gesamtzahl der ECTS-Punkte des Studiengangs
 
 class Belegung:                                                                 # Bauplan für eine Belegung
-    def __init__(self, startdatum, studiengang):                                # Initialisiert eine Belegung mit einem Startdatum und einer leeren Liste von Semestern
+    def __init__(self, startdatum, studiengang):                                # Initialisiert eine Belegung mit einem Startdatum, einem Studiengang und einer leeren Liste von Semestern
         self.startdatum = startdatum                                            # Speichert das Startdatum der Belegung
         self.studiengang = studiengang                                          # Speichert den Studiengang der Belegung
         self.semester = []                                                      # Leere Liste, die die Semester der Belegung speichert
@@ -101,7 +101,7 @@ class Belegung:                                                                 
         else:
             return None                                                         # Gibt None zurück, wenn keine bewerteten Module vorhanden sind
 
-    def semester_entfernen(self, semester):                                     # Entfernt ein Semester aus der Liste der Semester der Belegung anhand der Semesternummer
+    def semester_entfernen(self, semester):                                     # Entfernt ein Semester aus der Liste der Semester der Belegung
         self.semester.remove(semester)                                          # Entfernt das angegebene Semester aus der Liste der Semester der Belegung
 
 class Student:                                                                  # Bauplan für einen Studenten

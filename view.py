@@ -1,4 +1,5 @@
 from modelle import Pruefungsleistung
+import getpass
 
 class KonsolenView:                                                                                     # Bauplan für die Konsolenansicht
     def zeige_fortschritt(self, fortschritt):                                                           # Methode zur Anzeige des Fortschritts eines Studenten
@@ -17,7 +18,7 @@ class KonsolenView:                                                             
 
     def frage_registrierungsdaten_ab(self):                                                             # Methode zur Abfrage von Registrierungsdaten
         benutzername = input("Benutzername: ")                                                          # Fragt den Benutzer nach dem Benutzernamen
-        passwort = input("Passwort: ")                                                                  # Fragt den Benutzer nach dem Passwort
+        passwort = getpass.getpass("Passwort: ")                                                        # Fragt den Benutzer nach dem Passwort (ohne sichtbare Eingabe)
         vorname = input("Vorname: ")                                                                    # Fragt den Benutzer nach dem Vornamen
         nachname = input("Nachname: ")                                                                  # Fragt den Benutzer nach dem Nachnamen
         zielnote = self.frage_float_ab("Zielnote: ")                                                    # Fragt den Benutzer nach der Zielnote und konvertiert sie in eine Gleitkommazahl
@@ -76,5 +77,19 @@ class KonsolenView:                                                             
         return antwort                                                                                  # Gibt die abgefragte Antwort zurück
 
     def frage_neues_passwort_ab(self):                                                                  # Methode zur Abfrage eines neuen Passworts
-        neues_passwort = input("Neues Passwort: ")                                                      # Fragt den Benutzer nach einem neuen Passwort
+        neues_passwort = getpass.getpass("Neues Passwort: ")                                            # Fragt den Benutzer nach einem neuen Passwort (ohne sichtbare Eingabe)
         return neues_passwort                                                                           # Gibt das abgefragte neue Passwort zurück
+
+    def zeige_gesamtuebersicht(self, semester_liste):                                                                    # Methode zur Anzeige der Gesamtübersicht der Semester
+        if not semester_liste:                                                                                          # Überprüft, ob die Semesterliste leer ist
+            print("Keine Semesterinformationen verfügbar.")                                                             # Gibt eine Meldung aus, wenn keine Semesterinformationen verfügbar sind
+            return                                                                                                      # Beendet die Methode
+        for semester in semester_liste:                                                                                 # Iteriert über die Semesterliste
+            print(f"\nSemester {semester.semester_nummer}:")                                                            # Gibt die Semesternummer aus
+            for modul in semester.module:                                                                               # Iteriert über die Module des Semesters                                                                                                                   
+                print(f" - {modul.name} ({modul.ects} ECTS, Status: {modul.status.value})")                             # Gibt den Namen und die ECTS-Punkte des Moduls aus
+                for pruefungsleistung in modul.pruefungsleistungen:                                                     # Iteriert über die Prüfungsleistungen des Moduls
+                    note_text = pruefungsleistung.note if pruefungsleistung.note is not None else "Keine Note"          # Überprüft, ob eine Note vorhanden ist und gibt sie aus, ansonsten wird "Keine Note" angezeigt
+                    print(f"   - {pruefungsleistung.titel} ({pruefungsleistung.datum}, Note: {note_text})")             # Gibt den Titel, das Datum und die Note der Prüfungsleistung aus
+
+# Quelle: https://www.youtube.com/watch?v=M3EHqLw5w8I

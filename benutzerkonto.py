@@ -1,6 +1,5 @@
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
-from modelle import Student
+from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 ph = PasswordHasher()                                                                               # Initialisiert den PasswordHasher für die Passwort-Hashing-Funktionalität
 
@@ -21,14 +20,14 @@ class Benutzerkonto:                                                            
         try:
             ph.verify(self.passwort_hash, passwort)                                                 # Überprüft, ob das eingegebene Passwort mit dem gespeicherten Passwort-Hash übereinstimmt
             return True                                                                             # Gibt True zurück, wenn die Anmeldung erfolgreich ist
-        except VerifyMismatchError:                                                                 # Fängt den Fehler ab, wenn das Passwort nicht übereinstimmt
+        except (VerifyMismatchError, InvalidHashError):                                             # Fängt die Fehler ab, wenn das Passwort nicht übereinstimmt oder der Hash ungültig ist
             return False                                                                            # Gibt False zurück, wenn die Anmeldung fehlschlägt
 
     def antwort_pruefen(self, antwort):                                                             # Methode zur Überprüfung der Sicherheitsantwort
         try:
             ph.verify(self.sicherheitsantwort_hash, self._normalisieren(antwort))                   # Überprüft die normalisierte und eingegebene Antwort gegen den gespeicherten Hash
             return True                                                                             # Gibt True zurück, wenn die Sicherheitsantwort korrekt ist
-        except VerifyMismatchError:                                                                 # Fängt den Fehler ab, wenn die Sicherheitsantwort nicht übereinstimmt
+        except (VerifyMismatchError, InvalidHashError):                                             # Fängt die Fehler ab, wenn die Sicherheitsantwort nicht übereinstimmt oder ungültig ist
             return False                                                                            # Gibt False zurück, wenn die Sicherheitsantwort falsch ist
 
     def passwort_aendern(self, neues_passwort):                                                     # Methode zur Änderung des Passworts

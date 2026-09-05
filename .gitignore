@@ -16,3 +16,5 @@ dist/*
 !dist/application.exe
 build/
 *.spec
+*.code-workspace
+*_BACKUP/

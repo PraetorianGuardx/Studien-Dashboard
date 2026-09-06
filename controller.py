@@ -3,102 +3,131 @@ from services import FortschrittService
 from modelle import Modul, Modulstatus, Student, Belegung, Studiengang, Semester, Pruefungsleistung
 
 class StudentController:
-    def __init__(self, fortschritt_service: FortschrittService):                                        # Initialisiert den StudentController mit einem FortschrittService
+    """Die Vermittlung zwischen der Bedienoberfläche und den Fach- und Repository-Klassen."""
+    # View und Application arbeiten ausschließlich über diese Methoden und greifen nie direkt auf die Fachklasse zu
+    # Jede Änderung wird sofort über das Repository gespeichert, ein extra Speicherbefehl in der Bedienung wird somit vermieden
+    def __init__(self, fortschritt_service: FortschrittService):
         self.fortschritt_service = fortschritt_service
 
-    def login_versuchen(self, benutzerkonto: Benutzerkonto, benutzername, passwort):                    # Versucht, einen Benutzer anzumelden
-        erfolgreich = benutzerkonto.melde_an(benutzername, passwort)                                    # Überprüft die Anmeldedaten des Benutzerkontos
-        return erfolgreich                                                                              # Gibt True zurück, wenn die Anmeldung erfolgreich war, sonst False
+    def login_versuchen(self, benutzerkonto: Benutzerkonto, benutzername, passwort):
+        """Die Anmeldedaten werden geprüft, bei Erfolg wird True zurückgegeben."""
+        # Die eigentliche Prüfung liegt im Benutzerkonto, der Controller reicht sie nur weiter, damit die Application die Fachklasse nicht selbst aufrufen muss
+        erfolgreich = benutzerkonto.melde_an(benutzername, passwort)
+        return erfolgreich
 
-    def fortschritt_abrufen(self, benutzername):                                                        # Ruft den Fortschritt eines Studenten ab
-        return self.fortschritt_service.fortschritt_anzeigen(benutzername)                              # Ruft den Fortschritt des Studenten über den FortschrittService ab
+    def fortschritt_abrufen(self, benutzername):
+        """Die Fortschrittsdaten werden über den FortschrittService abgerufen."""
+        return self.fortschritt_service.fortschritt_anzeigen(benutzername)
 
-    def registrieren(self, konto_repository, benutzername, passwort, vorname, nachname, zielnote, regelstudienzeit, sicherheitsfrage, sicherheitsantwort, studiengang_name, ects_gesamt, start_datum):      # Registriert einen neuen Benutzer
-        bestehnendes_konto = konto_repository.laden(benutzername)                                                                                                                                           # Überprüft, ob ein Konto mit dem angegebenen Benutzernamen bereits existiert
-        if bestehnendes_konto is not None:                                                                                                                                                                  # Wenn ein Konto mit dem angegebenen Benutzernamen existiert
-            return None                                                                                                                                                                                     # Gibt None zurück, wenn der Benutzername bereits existiert
+    def registrieren(self, konto_repository, benutzername, passwort, vorname, nachname, zielnote, regelstudienzeit, sicherheitsfrage, sicherheitsantwort, studiengang_name, ects_gesamt, start_datum):
+        """Ein neues Benutzerkonto wird angelegt, bei bereits vergebenem Benutzernamen wird None zurückgegeben."""
+        bestehendes_konto = konto_repository.laden(benutzername)
+        if bestehendes_konto is not None:
+            return None
 
-        student = Student(vorname, nachname, zielnote, regelstudienzeit)                                # Erstellt ein neues Studentenobjekt
-        studiengang = Studiengang(studiengang_name, ects_gesamt)                                        # Erstellt ein neues Studiengang-Objekt
-        belegung = Belegung(start_datum, studiengang)                                                   # Erstellt ein neues Belegungsobjekt mit dem Startdatum und dem Studiengang
-        student.belegung_hinzufuegen(belegung)                                                          # Fügt die Belegung dem Studentenobjekt hinzu
-        konto = Benutzerkonto(benutzername, passwort, student, sicherheitsfrage, sicherheitsantwort)    # Erstellt ein neues Benutzerkonto mit dem Studentenobjekt
-        konto_repository.speichern(konto)                                                               # Speichert das neue Benutzerkonto im Repository
-        return konto                                                                                    # Gibt das neu erstellte Benutzerkonto zurück
+        # Hier wird der gesamte Objektbaum aufgebaut: der Studiengang beschreibt den allgemeinen Aufbau, die Belegung verbindet ihn mit dem Studenten
+        # Das Benutzerkonto erhält den Studenten und nicht umgekehrt, damit die fachlichen Daten nichts von den Zugangsdaten wissen müssen
+        student = Student(vorname, nachname, zielnote, regelstudienzeit)
+        studiengang = Studiengang(studiengang_name, ects_gesamt)
+        belegung = Belegung(start_datum, studiengang)
+        student.belegung_hinzufuegen(belegung)
+        konto = Benutzerkonto(benutzername, passwort, student, sicherheitsfrage, sicherheitsantwort)
+        konto_repository.speichern(konto)
+        return konto
 
-    def semester_hinzufuegen(self, benutzername, konto_repository, semester_nummer):                    # Fügt ein neues Semester zu einem Studenten hinzu
-        konto = konto_repository.laden(benutzername)                                                    # Lädt das Benutzerkonto aus dem Repository
-        belegung = konto.student.belegungen[0]                                                          # Greift auf die erste Belegung des Studenten zu (angenommen, es gibt nur eine Belegung)
-        for vorhandenes_semester in belegung.semester:                                                  # Überprüft, ob das Semester bereits in der Belegung existiert
-            if vorhandenes_semester.semester_nummer == semester_nummer:                                 # Wenn ein Semester mit der gleichen Semesternummer gefunden wird
-                return False                                                                            # Gibt False zurück, um anzuzeigen, dass das Semester bereits existiert
-        neues_semester = Semester(semester_nummer)                                                      # Erstellt ein neues Semesterobjekt mit der angegebenen Semesternummer
-        belegung.semester_hinzufuegen(neues_semester)                                                   # Fügt das neue Semester der Belegung hinzu
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
-        return True                                                                                     # Gibt True zurück, um anzuzeigen, dass das Semester erfolgreich hinzugefügt wurde
+    def semester_hinzufuegen(self, benutzername, konto_repository, semester_nummer):
+        """Ein Semester wird angelegt, bei bereits vorhandener Semesternummer wird False zurückgegeben."""
+        konto = konto_repository.laden(benutzername)
+        # Es wird immer die erste Belegung verwendet, weil die Anwendung pro Student genau eine anlegt
+        belegung = konto.student.belegungen[0]
+        # Doppelte Semesternummern werden verhindert, damit die Auswahlliste in der View eindeutig bleibt
+        for vorhandenes_semester in belegung.semester:
+            if vorhandenes_semester.semester_nummer == semester_nummer:
+                return False
+        neues_semester = Semester(semester_nummer)
+        belegung.semester_hinzufuegen(neues_semester)
+        konto_repository.speichern(konto)
+        return True
 
-    def semester_auflisten(self, benutzername, konto_repository):                                       # Listet alle Semester eines Studenten auf
-        konto = konto_repository.laden(benutzername)                                                    # Lädt das Benutzerkonto aus dem Repository
-        belegung = konto.student.belegungen[0]                                                          # Greift auf die erste Belegung des Studenten zu (angenommen, es gibt nur eine Belegung)
-        return konto, belegung.semester                                                                 # Gibt das Benutzerkonto und die Liste der Semester des Studenten zurück
+    def semester_auflisten(self, benutzername, konto_repository):
+        """Das Benutzerkonto und die Liste seiner Semester werden zurückgegeben."""
+        # Das Konto wird mit zurückgegeben, weil die Application es anschließend zum Speicher der Änderung braucht und es sonst ein zweites Mal laden müsste
+        konto = konto_repository.laden(benutzername)
+        belegung = konto.student.belegungen[0]
+        return konto, belegung.semester
 
-    def semester_entfernen(self, konto_repository, konto, semester):                                    # Entfernt ein Semester aus der Belegung eines Studenten
-        belegung = konto.student.belegungen[0]                                                          # Greift auf die erste Belegung des Studenten zu (angenommen, es gibt nur eine Belegung)
-        belegung.semester_entfernen(semester)                                                           # Entfernt das angegebene Semester aus der Belegung
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
+    def semester_entfernen(self, konto_repository, konto, semester):
+        """Ein Semester wird samt seiner Module aus der Belegung entfernt."""
+        belegung = konto.student.belegungen[0]
+        belegung.semester_entfernen(semester)
+        konto_repository.speichern(konto)
 
-    def modul_hinzufuegen(self, konto_repository, konto, semester, modul_daten):                        # Fügt ein neues Modul zu einem Semester eines Studenten hinzu
-        name, ects = modul_daten                                                                        # Entpackt die Modul-Daten (Name und ECTS-Punkte)
-        for vorhandenes_modul in semester.module:                                                       # Überprüft, ob das Modul bereits im Semester existiert
-            if vorhandenes_modul.name.strip().lower() == name.strip().lower():                          # Wenn ein Modul mit dem gleichen Namen gefunden wird (unabhängig von Groß-/Kleinschreibung und Leerzeichen)
-                return False                                                                            # Gibt False zurück, um anzuzeigen, dass das Modul bereits existiert
-        modul = Modul(name, Modulstatus.BEVORSTEHEND, ects)                                             # Erstellt ein neues Modulobjekt mit dem Status "BEVORSTEHEND"
-        semester.modul_hinzufuegen(modul)                                                               # Fügt das Modul dem Semester hinzu
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
-        return True                                                                                     # Gibt True zurück, um anzuzeigen, dass das Modul erfolgreich hinzugefügt wurde
+    def modul_hinzufuegen(self, konto_repository, konto, semester, modul_daten):
+        """Ein Modul wird dem Semester hinzugefügt, bei bereits vorhandenem Namen wird False zurückgegeben."""
+        name, ects = modul_daten
+        # Der Vergleich ignoriert Groß-/Kleinschreibung und Leerzeichen, damit "Python" und "python" nicht als zwei Module angelegt werden
+        for vorhandenes_modul in semester.module:
+            if vorhandenes_modul.name.strip().lower() == name.strip().lower():
+                return False
+        # Ein neues Modul startet immer als BEVORSTEHEND, den Status ändert erst das Eintragen der Note
+        modul = Modul(name, Modulstatus.BEVORSTEHEND, ects)
+        semester.modul_hinzufuegen(modul)
+        konto_repository.speichern(konto)
+        return True
 
-    def modul_auflisten(self, semester):                                                                # Listet alle Module eines Semesters eines Studenten auf
-        return semester.module                                                                          # Gibt die Liste der Module des Semesters zurück
+    def modul_auflisten(self, semester):
+        """Die Module des Semesters werden zurückgegeben."""
+        return semester.module
 
-    def modul_entfernen(self, konto_repository, konto, semester, modul):                                # Entfernt ein Modul aus einem Semester eines Studenten
-        semester.modul_entfernen(modul)                                                                 # Entfernt das angegebene Modul aus dem Semester
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
+    def modul_entfernen(self, konto_repository, konto, semester, modul):
+        """Ein Modul wird samt Prüfungsleistungen aus dem Semester entfernt."""
+        semester.modul_entfernen(modul)
+        konto_repository.speichern(konto)
 
-    def pruefungsleistung_eintragen(self, konto_repository, konto, modul, daten):                       # Trägt eine Prüfungsleistung in ein Modul eines Studenten ein
-        titel, datum, note = daten                                                                      # Entpackt die Daten der Prüfungsleistung (Titel, Datum und Note)
-        pruefungsleistung = Pruefungsleistung(titel, datum)                                             # Erstellt ein neues Prüfungsleistungsobjekt
-        pruefungsleistung.note = note                                                                   # Setzt die Note der Prüfungsleistung
-        modul.pruefungsleistung_hinzufuegen(pruefungsleistung)                                          # Fügt die Prüfungsleistung dem Modul hinzu
-        if note == 5.0:                                                                                 # Überprüft, ob die Note der Prüfungsleistung 5.0 ist (nicht bestanden)
-            modul.status = Modulstatus.AKTUELL                                                          # Setzt den Status des Moduls auf "AKTUELL", wenn die Note 5.0 ist (nicht bestanden)
-        else:                                                                                           
-            modul.status = Modulstatus.ABGESCHLOSSEN                                                    # Setzt den Status des Moduls auf "ABGESCHLOSSEN"
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
-
-    def pruefungsleistung_entfernen(self, konto_repository, konto, modul, pruefungsleistung):           # Entfernt eine Prüfungsleistung aus einem Modul eines Studenten
-        modul.pruefungsleistung_entfernen(pruefungsleistung)                                            # Entfernt die angegebene Prüfungsleistung aus dem Modul
-        letzte_note = modul.modulnote_berechnen()                                                       # Berechnet die Note des Moduls basierend auf den verbleibenden Prüfungsleistungen
-        if letzte_note is None:                                                                         # Überprüft, ob es keine Prüfungsleistungen mehr im Modul gibt
-            modul.status = Modulstatus.BEVORSTEHEND                                                     # Setzt den Status des Moduls auf "BEVORSTEHEND", wenn keine Prüfungsleistungen mehr vorhanden sind
-        elif letzte_note == 5.0:                                                                        # Überprüft, ob die Note der letzten Prüfungsleistung 5.0 ist (nicht bestanden)
-            modul.status = Modulstatus.AKTUELL                                                          # Setzt den Status des Moduls auf "AKTUELL", wenn die Note der letzten Prüfungsleistung 5.0 ist (nicht bestanden)
+    def pruefungsleistung_eintragen(self, konto_repository, konto, modul, daten):
+        """Eine Prüfungsleistung wird eingetragen und der Modulstatus entsprechend gesetzt."""
+        titel, datum, note = daten
+        pruefungsleistung = Pruefungsleistung(titel, datum)
+        pruefungsleistung.note = note
+        modul.pruefungsleistung_hinzufuegen(pruefungsleistung)
+        # Bei 5.0 bleibt das Modul auf AKTUELL statt ABGESCHLOSSEN, sonst würden ECTS für eine nicht bestandene Prüfung gutgeschrieben werden
+        if note == 5.0:
+            modul.status = Modulstatus.AKTUELL
         else:
-            modul.status = Modulstatus.ABGESCHLOSSEN                                                    # Setzt den Status des Moduls auf "ABGESCHLOSSEN", wenn die Note der letzten Prüfungsleistung nicht 5.0 ist (bestanden)
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
+            modul.status = Modulstatus.ABGESCHLOSSEN
+        konto_repository.speichern(konto)
 
-    def konto_loeschen(self, benutzername, konto_repository):                                           # Löscht ein Benutzerkonto eines Studenten
-        return konto_repository.loeschen(benutzername)                                                  # Löscht das Benutzerkonto aus dem Repository
+    def pruefungsleistung_entfernen(self, konto_repository, konto, modul, pruefungsleistung):
+        """Eine Prüfungsleistung wird entfernt und der Modulstatus neu bestimmt."""
+        modul.pruefungsleistung_entfernen(pruefungsleistung)
+        # Der Status muss neu bestimmt werden, sonst bliebe ein Modul ohne verbleibende Note weiterhin ABGESCHLOSSEN und würde seine ECTS mitzählen, obwohl keine Bewertung mehr vorliegt
+        letzte_note = modul.modulnote_berechnen()
+        if letzte_note is None:
+            modul.status = Modulstatus.BEVORSTEHEND
+        elif letzte_note == 5.0:
+            modul.status = Modulstatus.AKTUELL
+        else:
+            modul.status = Modulstatus.ABGESCHLOSSEN
+        konto_repository.speichern(konto)
 
-    def sicherheitsantwort_pruefen(self, konto_repository, benutzername, antwort):                      # Prüft die Sicherheitsantwort eines Benutzerkontos
-        konto = konto_repository.laden(benutzername)                                                    # Lädt das Benutzerkonto aus dem Repository
-        if konto is None:                                                                               # Überprüft, ob das Benutzerkonto existiert
-            return False                                                                                # Gibt False zurück, wenn das Benutzerkonto nicht existiert
-        return konto.antwort_pruefen(antwort)                                                           # Prüft die Sicherheitsantwort des Benutzerkontos und gibt das Ergebnis zurück
+    def konto_loeschen(self, benutzername, konto_repository):
+        """Das Benutzerkonto wird gelöscht und True wird zurückgegeben, falls es vorhanden ist."""
+        return konto_repository.loeschen(benutzername)
 
-    def passwort_setzen(self, konto_repository, benutzername, neues_passwort):                          # Setzt ein neues Passwort für ein Benutzerkonto
-        konto = konto_repository.laden(benutzername)                                                    # Lädt das Benutzerkonto aus dem Repository
-        if konto is None:                                                                               # Überprüft, ob das Benutzerkonto existiert
-            return False                                                                                # Gibt False zurück, wenn das Benutzerkonto nicht existiert
-        konto.passwort_aendern(neues_passwort)                                                          # Ändert das Passwort des Benutzerkontos
-        konto_repository.speichern(konto)                                                               # Speichert das aktualisierte Benutzerkonto im Repository
-        return True                                                                                     # Gibt True zurück, um anzuzeigen, dass das Passwort erfolgreich geändert wurde
+    # Das Prüfen der Sicherheitsantwort und das Setzen des Passworts sind bewusst zwei Methoden, damit die Application das neue Passwort erst abfragt, nachdem die Antwort bestätigt wurde
+    def sicherheitsantwort_pruefen(self, konto_repository, benutzername, antwort):
+        """Die Sicherheitsantwort wird geprüft, bei fehlendem Konto wird False zurückgegeben."""
+        konto = konto_repository.laden(benutzername)
+        if konto is None:
+            return False
+        return konto.antwort_pruefen(antwort)
+
+    def passwort_setzen(self, konto_repository, benutzername, neues_passwort):
+        """Das Passwort wird gesetzt, bei fehlendem Konto wird False zurückgegeben."""
+        # Hier wird nicht selber geprüft, ob der Aufrufer berechtigt ist, das muss vorher über sicherheitsantwort_pruefen passieren
+        konto = konto_repository.laden(benutzername)
+        if konto is None:
+            return False
+        konto.passwort_aendern(neues_passwort)
+        konto_repository.speichern(konto)
+        return True

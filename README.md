@@ -15,3 +15,4 @@ Alternativ steht "dist/application.exe" als eigenständig ausführbare Version z
 
 Das Projekt folgt einem Schichtenmodell: Domain -> Repository -> Service -> Controller -> View -> Application.
 Details dazu im Reflexions- und Entwurfsdokument (Phase 2) des zugehörigen Projekts.
+Verwendete Quellen befinden sich im "quellen.md".

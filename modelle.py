@@ -1,124 +1,145 @@
 from enum import Enum
 
-class Modulstatus(Enum):                                                        # Enum-Klasse für den Status eines Moduls
-    BEVORSTEHEND = "bevorstehend"                                               # Status: Modul bevorstehend
-    AKTUELL = "aktuell"                                                         # Status: Modul aktuell
-    ABGESCHLOSSEN = "abgeschlossen"                                             # Status: Modul abgeschlossen
+class Modulstatus(Enum):
+    """Der Lebenszyklus eines Moduls, von bevorstehend bis zum bestandenen Abschluss."""
+    # Damit Tippfehler nicht unbemerkt durchgehen, wird ein Enum anstatt eines Strings genutzt
+    # Dadurch kann der Setter in Modul den Wert per isinstance prüfen
+    BEVORSTEHEND = "bevorstehend"
+    AKTUELL = "aktuell"
+    ABGESCHLOSSEN = "abgeschlossen"
 
-class Pruefungsleistung:                                                        # Bauplan für eine Prüfungsleistung
+class Pruefungsleistung:
+    """Eine Prüfung innerhalb eines Moduls, zum Beispiel eine Klausur, ein Test oder eine Hausarbeit."""
+    # Damit Zwischenwerte wie 2.1 oder 4.5 nicht angenommen werden, wurden feste Notenstufen implementiert
+    # Es handelt sich bewusst um ein Klassenattribut, da die Liste für alle Prüfungsleistungen gleich ist und die View sie direkt als Auswahlmenü verwendet
+    gueltige_noten = [1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0]
 
-    gueltige_noten = [1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0]    # Liste der gültigen Noten für eine Prüfungsleistung
-
-    def __init__(self, titel, datum):                                           # Initialisiert eine Prüfungsleistung mit einem Titel, einem Datum und einer Note (initialisiert mit None)
-        self.titel = titel                                                      # Speichert den Titel der Prüfungsleistung
-        self.datum = datum                                                      # Speichert das Datum der Prüfungsleistung
-        self.note = None                                                        # Speichert die Note der Prüfungsleistung (initialisiert mit None, da die Note noch nicht bekannt ist)
+    def __init__(self, titel, datum):
+        self.titel = titel
+        self.datum = datum
+        # Die Zuweisung der Note läuft über den Setter, deshalb muss None dort ausdrücklich erlaubt sein
+        self.note = None
 
     @property
-    def note(self):                                                             # Getter-Methode für die Note der Prüfungsleistung
-        return self._note                                                       # Gibt die Note der Prüfungsleistung zurück
+    def note(self):
+        return self._note
 
     @note.setter
-    def note(self, wert):                                                                                               # Setter-Methode für die Note der Prüfungsleistung
-        if wert is not None and wert not in self.gueltige_noten:                                                        # Überprüft, ob die Note gültig ist (entweder None oder in der Liste der gültigen Noten)
+    def note(self, wert):
+        # Die Prüfung der Noten ist im Setter und nicht im Controller, damit keine ungültigen Noten in das Objekt gelangen können
+        if wert is not None and wert not in self.gueltige_noten:
             raise ValueError(f"Ungültige Note. Bitte geben Sie eine der gültigen Noten {self.gueltige_noten} ein.")
-        self._note = wert                                                                                               # Speichert die Note der Prüfungsleistung
+        self._note = wert
 
 class Modul:
-    def __init__(self, name, status, ects):                                     # Initialisiert ein Modul mit einem Namen, einem Status und einer Anzahl von ECTS-Punkten
-        self.name = name                                                        # Speichert den Namen des Moduls
-        self.status = status                                                    # Speichert den Status des Moduls (bevorstehend, aktuell oder abgeschlossen)
-        self.ects = ects                                                        # Speichert die ECTS-Punkte des Moduls
-        self.pruefungsleistungen = []                                           # Leere Liste, die die Prüfungsleistungen des Moduls speichert
+    """Ein Modul eines Semesters mit ECTS-Punkten und den zugehörigen Prüfungsleistungen."""
+    def __init__(self, name, status, ects):
+        self.name = name
+        self.status = status
+        self.ects = ects
+        self.pruefungsleistungen = []
 
     @property
-    def status(self):                                                           # Getter-Methode für den Status des Moduls
-        return self._status                                                     # Gibt den Status des Moduls zurück
+    def status(self):
+        return self._status
 
     @status.setter
-    def status(self, wert):                                                     # Setter-Methode für den Status des Moduls
-        if not isinstance(wert, Modulstatus):                                   # Überprüft, ob der Wert eine Instanz von Modulstatus ist
-            raise ValueError("Status muss ein Modulstatus sein.")               # Wirft eine Fehlermeldung, wenn der Wert kein Modulstatus ist
-        self._status = wert                                                     # Speichert den Status des Moduls
+    def status(self, wert):
+        # Ein Enum alleine schützt in Python nicht vor falschen Werten, ohne diese Prüfung wäre self.status = "abgeschlossen" als String möglich
+        if not isinstance(wert, Modulstatus):
+            raise ValueError("Status muss ein Modulstatus sein.")
+        self._status = wert
 
-    def pruefungsleistung_hinzufuegen(self, pruefungsleistung):                 # Fügt eine Prüfungsleistung zum Modul hinzu
-        self.pruefungsleistungen.append(pruefungsleistung)                      # Hängt die Prüfungsleistungen an die Liste der Prüfungsleistungen des Moduls an
+    def pruefungsleistung_hinzufuegen(self, pruefungsleistung):
+        """Eine Prüfungsleistung wird an die Liste des Moduls angehängt."""
+        self.pruefungsleistungen.append(pruefungsleistung)
 
-    def modulnote_berechnen(self):                                              # Berechnet die Modulnote des Moduls
-        for pruefungsleistung in reversed(self.pruefungsleistungen):            # Iteriert über alle Prüfungsleistungen des Moduls in umgekehrter Reihenfolge
-            if pruefungsleistung.note is not None:                              # Überprüft, ob die Prüfungsleistung eine Note hat
-                return pruefungsleistung.note                                   # Gibt die Note der letzten bewerteten Prüfungsleistung zurück
-        return None                                                             # Gibt None zurück, wenn keine bewerteten Prüfungsleistungen vorhanden sind
+    def modulnote_berechnen(self):
+        """Die Note der zuletzt bewerteten Prüfungsleistung wird zurückgegeben, sonst None."""
+        # Es wurde bewusst kein Durchschnitt gewählt, da eine Prüfung mit 5.0 als nicht bestanden gilt und wiederholt werden muss, erst dann zählt die bestandene Note
+        # Die Liste steht in Eintragungsreihenfolge, reversed() durchläuft sie deshalb von hinten und liefert den neuesten Versuch zuerst
+        for pruefungsleistung in reversed(self.pruefungsleistungen):
+            if pruefungsleistung.note is not None:
+                return pruefungsleistung.note
+        return None
 
-    def pruefungsleistung_entfernen(self, pruefungsleistung):                   # Entfernt eine Prüfungsleistung aus dem Modul
-        self.pruefungsleistungen.remove(pruefungsleistung)                      # Entfernt die angegebene Prüfungsleistung aus der Liste der Prüfungsleistungen des Moduls
+    def pruefungsleistung_entfernen(self, pruefungsleistung):
+        """Die übergebene Prüfungsleistung wird aus dem Modul entfernt."""
+        self.pruefungsleistungen.remove(pruefungsleistung)
 
-class Semester:                                                                 # Bauplan für ein Semester
-    def __init__(self, nummer):                                                 # Initialisiert ein Semester mit einer Nummer und einer leeren Liste von Modulen
-        self.semester_nummer = nummer                                           # Speichert die Nummer des Semesters
-        self.module = []                                                        # Leere Liste, die die Module des Semesters speichert
+class Semester:
+    """Ein Semester, das die in diesem Zeitraum belegten Module bündelt."""
+    def __init__(self, nummer):
+        self.semester_nummer = nummer
+        self.module = []
 
-    def modul_hinzufuegen(self, modul):                                         # Fügt ein Modul zur Liste der Module des Semesters hinzu
-        self.module.append(modul)                                               # Hängt das Modul an die Liste der Module des Semesters an
+    def modul_hinzufuegen(self, modul):
+        """Ein Modul wird dem Semester hinzugefügt."""
+        self.module.append(modul)
 
-    def modul_entfernen(self, modul):                                           # Entfernt ein Modul aus der Liste der Module des Semesters
-        self.module.remove(modul)                                               # Entfernt das angegebene Modul aus der Liste der Module des Semesters
+    def modul_entfernen(self, modul):
+        """Das übergebene Modul wird aus dem Semester entfernt."""
+        self.module.remove(modul)
 
-class Studiengang:                                                              # Bauplan für einen Studiengang
-    def __init__(self, name, ects_gesamt):                                      # Initialisiert einen Studiengang mit einem Namen und einer Gesamtzahl von ECTS-Punkten
-        self.name = name                                                        # Speichert den Namen des Studiengangs
-        self.ects_gesamt = ects_gesamt                                          # Speichert die Gesamtzahl der ECTS-Punkte des Studiengangs
+class Studiengang:
+    """Der allgemeine Studienaufbau, unabhängig von einer konkreten Person."""
+    def __init__(self, name, ects_gesamt):
+        self.name = name
+        self.ects_gesamt = ects_gesamt
 
-class Belegung:                                                                 # Bauplan für eine Belegung
-    def __init__(self, startdatum, studiengang):                                # Initialisiert eine Belegung mit einem Startdatum, einem Studiengang und einer leeren Liste von Semestern
-        self.startdatum = startdatum                                            # Speichert das Startdatum der Belegung
-        self.studiengang = studiengang                                          # Speichert den Studiengang der Belegung
-        self.semester = []                                                      # Leere Liste, die die Semester der Belegung speichert
+class Belegung:
+    """Die persönlichen Studiendaten eines Studenten, die mit einem Studiengang verbunden werden."""
+    def __init__(self, startdatum, studiengang):
+        self.startdatum = startdatum
+        self.studiengang = studiengang
+        self.semester = []
 
-    def semester_hinzufuegen(self, semester):                                   # Fügt ein Semester zur Liste der Semester der Belegung hinzu
-        self.semester.append(semester)                                          # Hängt das Semester an die Liste der Semester der Belegung an
+    def semester_hinzufuegen(self, semester):
+        """Ein Semester wird der Belegung hinzugefügt."""
+        self.semester.append(semester)
 
-    def ects_erreicht_berechnen(self):                                          # Berechnet die erreichten ECTS-Punkte der Belegung
-        ects_erreicht = 0                                                       # Initialisiert die erreichten ECTS-Punkte mit 0
-        for semester in self.semester:                                          # Iteriert über alle Semester der Belegung
-            for modul in semester.module:                                       # Iteriert über alle Module des Semesters
-                if modul.status == Modulstatus.ABGESCHLOSSEN:                   # Überprüft, ob das Modul abgeschlossen ist
-                    ects_erreicht += modul.ects                                 # Addiert die ECTS-Punkte des Moduls zu den erreichten ECTS-Punkten
-        return ects_erreicht                                                    # Gibt die erreichten ECTS-Punkte zurück
+    def ects_erreicht_berechnen(self):
+        """Die Summe der ECTS-Punkte aller abgeschlossenen Module wird zurückgegeben."""
+        # Nur ABGESCHLOSSEN zählt, weil ECTS erst mit dem Bestehen gutgeschrieben werden
+        # Ein nicht bestandenes Modul behält den Status AKTUELL und fällt somit automatisch heraus
+        ects_erreicht = 0
+        for semester in self.semester:
+            for modul in semester.module:
+                if modul.status == Modulstatus.ABGESCHLOSSEN:
+                    ects_erreicht += modul.ects
+        return ects_erreicht
 
-    def notendurchschnitt_berechnen(self):                                      # Berechnet den Notendurchschnitt der Belegung
-        summe_noten = 0                                                         # Initialisiert die Summe der Noten mit 0
-        summe_ects = 0                                                          # Initialisiert die Summe der ECTS-Punkte mit 0
-        for semester in self.semester:                                          # Iteriert über alle Semester der Belegung
-            for modul in semester.module:                                       # Iteriert über alle Module des Semesters
-                if modul.status == Modulstatus.ABGESCHLOSSEN:                   # Überprüft, ob das Modul abgeschlossen ist
-                    modulnote = modul.modulnote_berechnen()                     # Berechnet die Modulnote des Moduls
-                    if modulnote is not None:                                   # Überprüft, ob die Modulnote nicht None ist
-                        summe_noten += modulnote * modul.ects                   # Addiert die Modulnote multipliziert mit den ECTS-Punkten des Moduls zur Summe der Noten
-                        summe_ects += modul.ects                                # Addiert die ECTS-Punkte des Moduls zur Summe der ECTS-Punkte
-        if summe_ects > 0:                                                      # Überprüft, ob die Summe der ECTS-Punkte größer als 0 ist
-            return summe_noten / summe_ects                                     # Gibt den gewichteten Notendurchschnitt zurück
+    def notendurchschnitt_berechnen(self):
+        """Der nach ECTS gewichtete Notendurchschnitt aller abgeschlossenen Module wird zurückgegeben, sonst None."""
+        # Die Gewichtung wird nach ECTS gemacht, weil ein Modul mit 10 ECTS stärker in den Abschluss eingeht als eines mit 5 ECTS
+        summe_noten = 0
+        summe_ects = 0
+        for semester in self.semester:
+            for modul in semester.module:
+                if modul.status == Modulstatus.ABGESCHLOSSEN:
+                    modulnote = modul.modulnote_berechnen()
+                    if modulnote is not None:
+                        summe_noten += modulnote * modul.ects
+                        summe_ects += modul.ects
+        if summe_ects > 0:
+            return summe_noten / summe_ects
         else:
-            return None                                                         # Gibt None zurück, wenn keine bewerteten Module vorhanden sind
+            return None
 
-    def semester_entfernen(self, semester):                                     # Entfernt ein Semester aus der Liste der Semester der Belegung
-        self.semester.remove(semester)                                          # Entfernt das angegebene Semester aus der Liste der Semester der Belegung
+    def semester_entfernen(self, semester):
+        """Das übergebene Semester wird aus der Belegung entfernt."""
+        self.semester.remove(semester)
 
-class Student:                                                                  # Bauplan für einen Studenten
-    def __init__(self, vorname, nachname, zielnote, regelstudienzeit):          # Initialisiert einen Studenten mit einem Vornamen, Nachnamen, Zielnote und Regelstudienzeit
-        self.vorname = vorname                                                  # Speichert den Vornamen des Studenten
-        self.nachname = nachname                                                # Speichert den Nachnamen des Studenten
-        self.zielnote = zielnote                                                # Speichert die Zielnote des Studenten
-        self.regelstudienzeit = regelstudienzeit                                # Speichert die Regelstudienzeit des Studenten
-        self.belegungen = []                                                    # Leere Liste, die die Belegungen des Studenten speichert
+class Student:
+    """Die fachlichen Stammdaten eines Studenten, die Zugangsdaten liegen getrennt im Benutzerkonto."""
+    def __init__(self, vorname, nachname, zielnote, regelstudienzeit):
+        self.vorname = vorname
+        self.nachname = nachname
+        self.zielnote = zielnote
+        self.regelstudienzeit = regelstudienzeit
+        # Als Liste angelegt, obwohl die Anwendung nur eine Belegung erzeugt und überall belegungen[0] verwendet, so bliebe ein Studienwechsel ergänzbar
+        self.belegungen = []
 
-    def belegung_hinzufuegen(self, belegung):                                   # Fügt eine Belegung zur Liste der Belegungen des Studenten hinzu
-        self.belegungen.append(belegung)                                        # Hängt die Belegung an die Liste der Belegungen des Studenten an
-
-# Quelle: https://www.youtube.com/watch?v=yYALsys-P_w
-# Quelle: https://www.youtube.com/watch?v=JeznW_7DlB0&t
-# Quelle: https://www.youtube.com/watch?v=rLyYb7BFgQI
-# Quelle: https://www.youtube.com/watch?v=TAMbq0iRUsA
-# Quelle: https://www.youtube.com/watch?v=HkbQ_NaH0Lc
-# Quelle: https://www.youtube.com/watch?v=0l0ygSCT_q8
-# Quelle: https://www.youtube.com/watch?v=0rHGnpH2_h8
+    def belegung_hinzufuegen(self, belegung):
+        """Eine Belegung wird dem Studenten hinzugefügt."""
+        self.belegungen.append(belegung)

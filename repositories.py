@@ -37,7 +37,7 @@ class JSONBenutzerkontoRepository(BenutzerkontoRepository):
         konten[konto.benutzername.strip().lower()] = konto
         # Die Kodierung wird ausdrücklich gesetzt, sonst richtet sich Python nach der Einstellung des Betriebssystems
         # Eine unter Windows geschriebene Datei ließe sich sonst auf einem anders eingestellten System nicht zuverlässig lesen
-        with open(self.dateipfad, "w", encoding = "utf-8") as datei:
+        with open(self.dateipfad, "w", encoding="utf-8") as datei:
             datei.write(jsonpickle.encode(konten))
 
     def laden(self, benutzername):
@@ -68,7 +68,7 @@ class JSONBenutzerkontoRepository(BenutzerkontoRepository):
         konten = self._alle_laden()
         if benutzername.strip().lower() in konten:
             del konten[benutzername.strip().lower()]
-            with open(self.dateipfad, "w",encoding = "utf-8") as datei:
+            with open(self.dateipfad, "w", encoding="utf-8") as datei:
                 datei.write(jsonpickle.encode(konten))
             return True
         return False

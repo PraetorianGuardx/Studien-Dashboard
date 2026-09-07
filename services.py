@@ -19,6 +19,11 @@ class FortschrittService:
         for belegung in student.belegungen:
             ects_erreicht += belegung.ects_erreicht_berechnen()
 
+        # Die Gesamt-ECTS kommen aus dem Studiengang der ersten Belegung, damit die View den Fortschritt ins Verhältnis setzen kann
+        ects_gesamt = 0
+        if len(student.belegungen) > 0:
+            ects_gesamt = student.belegungen[0].studiengang.ects_gesamt
+
         # Der Notendurchschnitt stammt aus der ersten Belegung, weil die Anwendung pro Student genau eine anlegt
         # Mehrere Belegungen ließen sich nicht einfach zu einem Wert verrechnen, da jede intern bereits nach ECTS gewichtet rechnet und die Zwischensumme dafür nicht zugänglich ist
         notendurchschnitt = None
@@ -32,6 +37,7 @@ class FortschrittService:
             "zielnote": student.zielnote,
             "regelstudienzeit": student.regelstudienzeit,
             "ects_erreicht": ects_erreicht,
+            "ects_gesamt": ects_gesamt,
             "notendurchschnitt": notendurchschnitt
         }
         return fortschritt

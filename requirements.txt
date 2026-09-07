@@ -1,2 +1,2 @@
-argon2-cffi
-jsonpickle
+argon2-cffi==25.1.0
+jsonpickle==4.1.2

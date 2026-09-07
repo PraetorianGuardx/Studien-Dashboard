@@ -1,4 +1,4 @@
-from modelle import Pruefungsleistung
+from modelle import Pruefungsleistung, Modulstatus
 import getpass
 
 class KonsolenView:
@@ -11,12 +11,17 @@ class KonsolenView:
 
         # Gelesen wird nur aus dem Dictionary des FortschrittService, dadurch muss die View die Fachklassen nicht kennen
         print(f"Student: {fortschritt['vorname']} {fortschritt['nachname']}")
-        print(f"Zielnote: {fortschritt['zielnote']}")
         print(f"Regelstudienzeit: {fortschritt['regelstudienzeit']}")
-        print(f"Erreichte ECTS: {fortschritt['ects_erreicht']}")
-        # Ohne abgeschlossenes Modul liefert der Service None, das wird hier unverändert ausgegeben
-        # Die Ausgabe zeigt damit ehrlich an, dass noch kein Durchschnitt berechnet werden kann
-        print(f"Notendurchschnitt: {fortschritt['notendurchschnitt']}")
+        # Der Prozentwert macht den Fortschritt sofort einschätzbar, die reine ECTS-Zahl sagt ohne Bezugsgröße wenig aus
+        prozent = 0.0
+        if fortschritt["ects_gesamt"] > 0:
+            prozent = fortschritt["ects_erreicht"] / fortschritt["ects_gesamt"] * 100
+        print(f"Erreichte ECTS: {fortschritt['ects_erreicht']} von {fortschritt['ects_gesamt']} ({prozent:.1f} %)")
+        # Ohne abgeschlossenes Modul liefert der Service None, statt "None" wird hier ein verständlicher Satz ausgegeben
+        if fortschritt["notendurchschnitt"] is None:
+            print("Notendurchschnitt: noch kein abgeschlossenes Modul bewertet")
+        else:
+            print(f"Notendurchschnitt: {fortschritt['notendurchschnitt']:.2f} (Ziel: {fortschritt['zielnote']})")
 
     def zeige_login_fehler(self):
         """Eine Fehlermeldung zur fehlgeschlagenen Anmeldung wird ausgegeben."""
@@ -24,26 +29,33 @@ class KonsolenView:
 
     def frage_registrierungsdaten_ab(self):
         """Alle Registrierungsdaten werden abgefragt und als Tupel zurückgegeben."""
+        # Die Abfrage ist in drei Blöcke gruppiert, damit der Benutzer nicht zwischen Konto- und Studiendaten hin und her springen muss
+        print("\n--- Zugangsdaten ---")
         benutzername = input("Benutzername: ")
         # getpass statt input, damit das Passwort nicht sichtbar in der Konsole und im Verlauf stehen bleibt
         passwort = getpass.getpass("Passwort: ")
-        vorname = input("Vorname: ")
-        nachname = input("Nachname: ")
-        zielnote = self.frage_float_ab("Zielnote: ")
-        regelstudienzeit = self.frage_int_ab("Regelstudienzeit (Angabe in Semestern): ")
         sicherheitsfrage = input("Sicherheitsfrage: ")
         sicherheitsantwort = input("Sicherheitsantwort: ")
+
+        print("\n--- Persönliche Daten ---")
+        vorname = input("Vorname: ")
+        nachname = input("Nachname: ")
+
+        print("\n--- Studium ---")
         studiengang_name = input("Studiengang: ")
         ects_gesamt = self.frage_int_ab("Gesamt-ECTS: ")
         start_datum = input("Startdatum (DD.MM.YYYY): ")
+        regelstudienzeit = self.frage_int_ab("Regelstudienzeit (Angabe in Semestern): ")
+        zielnote = self.frage_float_ab("Zielnote: ")
 
+        # Die Reihenfolge im Tupel bleibt unverändert, weil registrieren() im Controller die Werte genauso erwartet
         return benutzername, passwort, vorname, nachname, zielnote, regelstudienzeit, sicherheitsfrage, sicherheitsantwort, studiengang_name, ects_gesamt, start_datum
 
-    def waehle_aus_liste(self, elemente, anzeige_funktion):
+    def waehle_aus_liste(self, elemente, beschriftungen):
         """Eine nummerierte Liste wird angezeigt und das gewählte Element zurückgegeben."""
-        # Die Beschriftung wird als Funktion übergeben, dadurch lässt sich dieselbe Auswahl für Semester, Module, Prüfungsleistungen und Noten verwenden
-        for index, element in enumerate(elemente, start=1):
-            print(f"{index}. {anzeige_funktion(element)}")
+        # Die Beschriftung wird als zweite Liste übergeben, dadurch lässt sich dieselbe Auswahl für Semester, Module, Prüfungsleistungen und Noten verwenden
+        for index, beschriftung in enumerate(beschriftungen, start=1):
+            print(f"{index}. {beschriftung}")
         # Bei ungültiger Eingabe wird erneut gefragt statt abzubrechen, ein Tippfehler soll das Programm nicht beenden
         while True:
             auswahl = self.frage_int_ab("Bitte wählen Sie eine Option: ")
@@ -51,6 +63,34 @@ class KonsolenView:
                 # Zurückgegeben wird das Objekt selbst, damit der Aufrufer nicht mit Indizes weiterarbeiten muss
                 return elemente[auswahl - 1]
             print("Ungültige Auswahl. Bitte versuchen Sie es erneut.")
+
+    def waehle_semester_aus(self, semester_liste):
+        """Ein Semester wird aus der übergebenen Liste ausgewählt und zurückgegeben."""
+        beschriftungen = []
+        for semester in semester_liste:
+            beschriftungen.append(f"Semester {semester.semester_nummer}")
+        return self.waehle_aus_liste(semester_liste, beschriftungen)
+
+    def waehle_modul_aus(self, modul_liste):
+        """Ein Modul wird aus der übergebenen Liste ausgewählt und zurückgegeben."""
+        beschriftungen = []
+        for modul in modul_liste:
+            beschriftungen.append(f"{modul.name} ({modul.ects} ECTS)")
+        return self.waehle_aus_liste(modul_liste, beschriftungen)
+
+    def waehle_pruefungsleistung_aus(self, pruefungsleistung_liste):
+        """Eine Prüfungsleistung wird aus der übergebenen Liste ausgewählt und zurückgegeben."""
+        beschriftungen = []
+        for pruefungsleistung in pruefungsleistung_liste:
+            beschriftungen.append(f"{pruefungsleistung.titel} ({pruefungsleistung.datum})")
+        return self.waehle_aus_liste(pruefungsleistung_liste, beschriftungen)
+
+    def waehle_note_aus(self):
+        """Eine Note wird aus den gültigen Notenstufen ausgewählt und zurückgegeben."""
+        beschriftungen = []
+        for note in Pruefungsleistung.gueltige_noten:
+            beschriftungen.append(f"Note: {note}")
+        return self.waehle_aus_liste(Pruefungsleistung.gueltige_noten, beschriftungen)
 
     def frage_semester_ab(self):
         """Die Semesternummer wird abgefragt und zurückgegeben."""
@@ -68,7 +108,7 @@ class KonsolenView:
         titel = input("Prüfungsleistungstitel: ")
         datum = input("Datum (DD.MM.YYYY): ")
         # Die Auswahl kommt direkt aus Pruefungsleistung.gueltige_noten, dadurch können Anzeige und Validierung nicht auseinanderlaufen
-        note = self.waehle_aus_liste(Pruefungsleistung.gueltige_noten, lambda n: f"Note: {n}")
+        note = self.waehle_note_aus()
         return titel, datum, note
 
     def frage_int_ab(self, prompt):
@@ -112,8 +152,25 @@ class KonsolenView:
                 print(f" - {modul.name} ({modul.ects} ECTS, Status: {modul.status.value})")
                 for pruefungsleistung in modul.pruefungsleistungen:
                     # Ohne Note wird ein Text angezeigt, damit in der Übersicht nicht "None" steht
-                    note_text = pruefungsleistung.note if pruefungsleistung.note is not None else "Keine Note"
+                    if pruefungsleistung.note is None:
+                        note_text = "Keine Note"
+                    else:
+                        note_text = pruefungsleistung.note
                     print(f"   - {pruefungsleistung.titel} ({pruefungsleistung.datum}, Note: {note_text})")
+
+    def zeige_module_nach_status(self, semester_liste):
+        """Alle Module werden nach ihrem Status gruppiert und ausgegeben."""
+        # Die Reihenfolge kommt direkt aus dem Enum, dadurch bleibt sie automatisch richtig, falls ein Status ergänzt wird
+        for status in Modulstatus:
+            print(f"\n{status.value.capitalize()}:")
+            gefunden = False
+            for semester in semester_liste:
+                for modul in semester.module:
+                    if modul.status == status:
+                        print(f" - {modul.name} ({modul.ects} ECTS, Semester {semester.semester_nummer})")
+                        gefunden = True
+            if not gefunden:
+                print(" - keine Module")
 
     def frage_anmeldedaten_ab(self):
         """Benutzername und Passwort werden abgefragt und als Tupel zurückgegeben."""

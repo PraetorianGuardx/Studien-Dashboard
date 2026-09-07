@@ -71,6 +71,7 @@ class Application:
             print("Passwort erfolgreich zurückgesetzt.")
         else:
             print("Fehler beim Zurücksetzen des Passworts. Bitte versuchen Sie es erneut.")
+            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
 
     def _hauptmenue(self, benutzername):
         """Das Menü des angemeldeten Studenten wird angezeigt, bis er sich abmeldet."""
@@ -94,11 +95,9 @@ class Application:
                 # Wartet auf die Eingabe, damit die Ausgabe nicht sofort vom nächsten Menü überschrieben wird
                 input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             elif wahl == "2":
-                # Hier wird nichts gespeichert, deshalb wird das Konto aus dem Tupel nicht weiterverwendet
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)
                 self.view.zeige_gesamtuebersicht(semester_liste)
                 self.view.zeige_module_nach_status(semester_liste)
-                # Wartet auf die Eingabe, damit die Ausgabe nicht sofort vom nächsten Menü überschrieben wird
                 input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             elif wahl == "3":
                 semester = self.view.frage_semester_ab()
@@ -107,12 +106,14 @@ class Application:
                     print("Semester erfolgreich hinzugefügt.")
                 else:
                     print("Semester konnte nicht hinzugefügt werden. Semester existiert bereits.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             elif wahl == "4":
                 modul_daten = self.view.frage_modul_ab()
                 # semester_auflisten gibt das Konto mit zurück, damit es anschließend für das Speichern verwendet werden kann und nicht erneut geladen werden muss
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)
                 if not semester_liste:
                     print("Keine Semester vorhanden. Bitte zuerst ein Semester hinzufügen.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                 else:
                     gewaehltes_semester = self.view.waehle_semester_aus(semester_liste)
                     erfolg = self.controller.modul_hinzufuegen(self.konto_repository, konto, gewaehltes_semester, modul_daten)
@@ -120,16 +121,19 @@ class Application:
                         print("Modul erfolgreich hinzugefügt.")
                     else:
                         print("Modul konnte nicht hinzugefügt werden. Modul existiert bereits.")
+                        input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             elif wahl == "5":
                 pruefungsleistung_daten = self.view.frage_pruefungsleistung_ab()
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)
                 if not semester_liste:
                     print("Keine Semester vorhanden. Bitte zuerst ein Semester hinzufügen.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                 else:
                     gewaehltes_semester = self.view.waehle_semester_aus(semester_liste)
                     modul_liste = self.controller.modul_auflisten(gewaehltes_semester)
                     if not modul_liste:
                         print("Keine Module vorhanden. Bitte zuerst ein Modul hinzufügen.")
+                        input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                     else:
                         gewaehltes_modul = self.view.waehle_modul_aus(modul_liste)
                         # Der Setter in Pruefungsleistung wirft bei einer ungültigen Note einen ValueError, der hier abgefangen wird, damit das Programm nicht abbricht
@@ -138,10 +142,12 @@ class Application:
                             print("Prüfungsleistung erfolgreich eingetragen.")
                         except ValueError as e:
                             print(f"Fehler beim Eintragen der Prüfungsleistung: {e}")
+                            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             elif wahl == "6":
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)
                 if not semester_liste:
                     print("Keine Semester vorhanden, es kann nichts entfernt werden.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                 else:
                     gewaehltes_semester = self.view.waehle_semester_aus(semester_liste)
                     self.controller.semester_entfernen(self.konto_repository, konto, gewaehltes_semester)
@@ -150,11 +156,13 @@ class Application:
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)
                 if not semester_liste:
                     print("Keine Semester vorhanden, es kann kein Modul entfernt werden.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                 else:
                     gewaehltes_semester = self.view.waehle_semester_aus(semester_liste)
                     modul_liste = self.controller.modul_auflisten(gewaehltes_semester)
                     if not modul_liste:
                         print("Keine Module vorhanden, es kann nichts entfernt werden.")
+                        input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                     else:
                         gewaehltes_modul = self.view.waehle_modul_aus(modul_liste)
                         self.controller.modul_entfernen(self.konto_repository, konto, gewaehltes_semester, gewaehltes_modul)
@@ -163,16 +171,19 @@ class Application:
                 konto, semester_liste = self.controller.semester_auflisten(benutzername, self.konto_repository)
                 if not semester_liste:
                     print("Keine Semester vorhanden, es kann keine Prüfungsleistung entfernt werden.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                 else:
                     gewaehltes_semester = self.view.waehle_semester_aus(semester_liste)
                     modul_liste = self.controller.modul_auflisten(gewaehltes_semester)
                     if not modul_liste:
                         print("Keine Module vorhanden, es kann keine Prüfungsleistung entfernt werden.")
+                        input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                     else:
                         gewaehltes_modul = self.view.waehle_modul_aus(modul_liste)
                         pruefungsleistung_liste = gewaehltes_modul.pruefungsleistungen
                         if not pruefungsleistung_liste:
                             print("Keine Prüfungsleistungen vorhanden, es kann nichts entfernt werden.")
+                            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                         else:
                             gewaehlte_pruefungsleistung = self.view.waehle_pruefungsleistung_aus(pruefungsleistung_liste)
                             self.controller.pruefungsleistung_entfernen(self.konto_repository, konto, gewaehltes_modul, gewaehlte_pruefungsleistung)
@@ -190,10 +201,13 @@ class Application:
                         break
                     else:
                         print("Fehler beim Löschen des Kontos.")
+                        input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
                 else:
-                    print("Abgebrochen.")
+                    print("Kontolöschung wurde abgebrochen.")
+                    input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             else:
                 print("Ungültige Auswahl. Bitte erneut versuchen.")
+                input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
 
     def _registrieren(self):
         """Die Registrierungsdaten werden abgefragt und ein neues Konto angelegt."""

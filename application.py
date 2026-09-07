@@ -34,6 +34,7 @@ class Application:
                 break
             else:
                 print("Ungültige Auswahl. Bitte erneut versuchen.")
+                input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
 
     def _anmelden(self):
         """Die Anmeldedaten werden abgefragt und bei Erfolg wird das Menü des Studenten geöffnet."""
@@ -43,12 +44,14 @@ class Application:
         # Bei unbekanntem Benutzernamen wird dieselbe Meldung ausgegeben wie bei falschem Passwort, damit nicht erkennbar ist, welcher Teil beim Login falsch war
         if konto is None:
             self.view.zeige_login_fehler()
+            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             return
         login_erfolg = self.controller.login_versuchen(konto, benutzername, passwort)
         if login_erfolg:
             self._hauptmenue(benutzername)
         else:
             self.view.zeige_login_fehler()
+            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
 
     def _passwort_vergessen(self):
         """Nach korrekter Sicherheitsantwort wird ein neues Passwort gesetzt."""
@@ -59,11 +62,13 @@ class Application:
         # Verbergen ließe es sich ohnehin kaum, weil im nächsten Schritt die persönliche Sicherheitsfrage des Kontos angezeigt wird
         if konto is None:
             print("Benutzerkonto existiert nicht.")
+            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             return
         antwort = self.view.frage_sicherheitsantwort_ab(konto.sicherheitsfrage)
         # Die Antwort wird geprüft, bevor nach dem neuen Passwort gefragt wird, sonst würde der Benutzer eines eingeben, das gar nicht gesetzt werden kann
         if not self.controller.sicherheitsantwort_pruefen(self.konto_repository, benutzername, antwort):
             print("Sicherheitsantwort ist nicht korrekt.")
+            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
             return
         neues_passwort = self.view.frage_neues_passwort_ab()
         erfolg = self.controller.passwort_setzen(self.konto_repository, benutzername, neues_passwort)
@@ -216,6 +221,7 @@ class Application:
         konto = self.controller.registrieren(self.konto_repository, *daten)
         if konto is None:
             print("Registrierung fehlgeschlagen. Benutzername existiert bereits.")
+            input("\nDrücken Sie die Eingabetaste, um fortzufahren...")
         else:
             print("Registrierung erfolgreich. Sie können sich jetzt anmelden.")
 

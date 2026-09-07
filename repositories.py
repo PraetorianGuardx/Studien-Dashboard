@@ -48,7 +48,7 @@ class JSONBenutzerkontoRepository(BenutzerkontoRepository):
     def _alle_laden(self):
         """Alle Benutzerkonten werden aus der Datei ausgelesen und als Dictionary zurückgegeben."""
         try:
-            with open(self.dateipfad, "r", encoding = "utf-8") as datei:
+            with open(self.dateipfad, "r", encoding="utf-8") as datei:
                 inhalt = datei.read()
                 # Eine leere Datei gilt nicht als Fehler, sondern ist der Zustand vor der ersten Registrierung
                 if not inhalt:

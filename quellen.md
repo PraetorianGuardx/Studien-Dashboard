@@ -33,6 +33,9 @@ Verwendete Tutorials und Dokumentation, gruppiert nach Themenbereich.
 ## KI-Unterstützung
 
 - Claude (Anthropic) und GitHub Copilot (Inline-Vorschläge in VS Code): 
-Architekturvorschläge, Unterstützung bei der Fehlersuche sowie Erklärung einzelner Python-Konstrukte, 
+Die Schichtenarchitektur habe ich auf Grundlage des Kursmaterials und des Tutor-Feedbacks
+im Dialog mit der KI erarbeitet; Auswahl, Umsetzung und Begründung der Entscheidungen liegen bei mir.
+Darüber hinaus Unterstützung bei der Fehlersuche sowie Erklärung einzelner Python-Konstrukte, 
 die nicht im Kursskript behandelt werden (`enumerate` mit `start`-Parameter).
 Die Vorschläge habe ich geprüft und in meinem eigenen Programmstil umgesetzt.
+
